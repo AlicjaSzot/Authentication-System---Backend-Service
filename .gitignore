@@ -1,0 +1,19 @@
+# === Node / TypeScript ===
+node_modules/
+dist/
+*.log
+.env
+
+# === TypeScript build ===
+*.tsbuildinfo
+
+# === CDK ===
+cdk.out/
+.cdk.staging/
+
+# === OS / Editor ===
+.DS_Store
+.vscode/
+
+# === Optional ===
+coverage/
