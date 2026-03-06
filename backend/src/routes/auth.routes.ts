@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { authenticateToken } from "../middleware/auth.middleware";
 
 const router = Router();
 
@@ -8,6 +10,7 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, name } = req.body;
 
+    //validation for register
     if (!email || !password) {
       res.status(400).json({ error: "Email and password are required" });
       return;
@@ -43,5 +46,72 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+router.post("/login", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+
+    //validation for login
+    if (!email || !password) {
+      res.status(400).json({ error: "Email and password are required" });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+    if (!user) {
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+
+    //generate jwt
+    const jwtSecret = process.env.JWT_SECRET || "fallback-secret";
+    const token = jwt.sign({ userId: user.id, email: user.email }, jwtSecret, {
+      expiresIn: "24h",
+    });
+    res.status(200).json({
+      message: "Logged in successfully",
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+    });
+  } catch (error) {
+    console.error("Error during login:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get(
+  "/profile",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.userId;
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, name: true, createdAt: true },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: "user not found" });
+        return;
+      }
+      res.status(200).json({ user });
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
 
 export default router;
