@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { authenticateToken } from "../middleware/auth.middleware";
 
 const router = Router();
 
@@ -89,5 +90,28 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+router.get(
+  "/profile",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.userId;
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, name: true, createdAt: true },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: "user not found" });
+        return;
+      }
+      res.status(200).json({ user });
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
 
 export default router;
