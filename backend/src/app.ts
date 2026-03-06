@@ -4,6 +4,7 @@ import { swaggerSpec } from "./config/swagger";
 import swaggerUi from "swagger-ui-express";
 import eventsRoutes from "./routes/events.routes";
 import itemsRoutes from "./routes/items.routes";
+import authRoutes from "./routes/auth.routes";
 
 export function createApp() {
   const app = express();
@@ -13,6 +14,7 @@ export function createApp() {
   app.use("/health", healthRouter);
   app.use("/events", eventsRoutes);
   app.use("/items", itemsRoutes);
+  app.use("/auth", authRoutes);
 
   //Swagger UI
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
