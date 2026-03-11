@@ -94,82 +94,82 @@ export class MyAwsProjectStack extends cdk.Stack {
     eventsConsumerLambda.addEnvironment("TABLE_NAME", eventsTable.tableName);
 
     // ========================================
-    // RDS PostgreSQL for Users
-    // ========================================
+    // // RDS PostgreSQL for Users --> uncomment after testing local deployment with Docker
+    // // ========================================
 
-    // VPC - Virtual Private Cloud (sieć prywatna w AWS)
-    const vpc = new ec2.Vpc(this, "AppVpc", {
-      maxAzs: 2, // 2 Availability Zones (wysoką dostępność)
-      natGateways: 0, // Bez NAT Gateway (oszczędność kosztów)
-    });
+    // // VPC - Virtual Private Cloud (sieć prywatna w AWS)
+    // const vpc = new ec2.Vpc(this, "AppVpc", {
+    //   maxAzs: 2, // 2 Availability Zones (wysoką dostępność)
+    //   natGateways: 0, // Bez NAT Gateway (oszczędność kosztów)
+    // });
 
-    // Security Group - firewall dla bazy danych
-    const dbSecurityGroup = new ec2.SecurityGroup(this, "DatabaseSG", {
-      vpc,
-      description: "Security group for PostgreSQL database",
-      allowAllOutbound: true,
-    });
+    // // Security Group - firewall dla bazy danych
+    // const dbSecurityGroup = new ec2.SecurityGroup(this, "DatabaseSG", {
+    //   vpc,
+    //   description: "Security group for PostgreSQL database",
+    //   allowAllOutbound: true,
+    // });
 
-    // Pozwól na połączenia z backendu (port 5432 = PostgreSQL)
-    dbSecurityGroup.addIngressRule(
-      ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(5432),
-      "Allow PostgreSQL access from anywhere (for development)",
-    );
+    // // Pozwól na połączenia z backendu (port 5432 = PostgreSQL)
+    // dbSecurityGroup.addIngressRule(
+    //   ec2.Peer.anyIpv4(),
+    //   ec2.Port.tcp(5432),
+    //   "Allow PostgreSQL access from anywhere (for development)",
+    // );
 
-    // Database credentials (automatycznie generowane)
-    const dbCredentials = new secretsmanager.Secret(this, "DBCredentials", {
-      secretName: "users-db-credentials",
-      generateSecretString: {
-        secretStringTemplate: JSON.stringify({ username: "dbadmin" }),
-        generateStringKey: "password",
-        excludePunctuation: true,
-        includeSpace: false,
-      },
-    });
+    // // Database credentials (automatycznie generowane)
+    // const dbCredentials = new secretsmanager.Secret(this, "DBCredentials", {
+    //   secretName: "users-db-credentials",
+    //   generateSecretString: {
+    //     secretStringTemplate: JSON.stringify({ username: "dbadmin" }),
+    //     generateStringKey: "password",
+    //     excludePunctuation: true,
+    //     includeSpace: false,
+    //   },
+    // });
 
-    // RDS PostgreSQL Instance
-    const database = new rds.DatabaseInstance(this, "UsersDatabase", {
-      engine: rds.DatabaseInstanceEngine.postgres({
-        version: rds.PostgresEngineVersion.VER_16_6,
-      }),
-      instanceType: ec2.InstanceType.of(
-        ec2.InstanceClass.T3,
-        ec2.InstanceSize.MICRO, // Free tier eligible
-      ),
-      vpc,
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PUBLIC, // Publiczny dostęp (łatwiejszy dla dev)
-      },
-      securityGroups: [dbSecurityGroup],
-      databaseName: "usersdb",
-      credentials: rds.Credentials.fromSecret(dbCredentials),
-      allocatedStorage: 20, // 20 GB (free tier)
-      maxAllocatedStorage: 30,
-      publiclyAccessible: true, // Możesz połączyć się z lokalnego komputera
-      removalPolicy: RemovalPolicy.DESTROY, // UWAGA: usuwa bazę przy cdk destroy
-      deletionProtection: false, // Możesz usunąć bazę
-    });
+    // // RDS PostgreSQL Instance
+    // const database = new rds.DatabaseInstance(this, "UsersDatabase", {
+    //   engine: rds.DatabaseInstanceEngine.postgres({
+    //     version: rds.PostgresEngineVersion.VER_16_6,
+    //   }),
+    //   instanceType: ec2.InstanceType.of(
+    //     ec2.InstanceClass.T3,
+    //     ec2.InstanceSize.MICRO,
+    //   ),
+    //   vpc,
+    //   vpcSubnets: {
+    //     subnetType: ec2.SubnetType.PUBLIC,
+    //   },
+    //   securityGroups: [dbSecurityGroup],
+    //   databaseName: "usersdb",
+    //   credentials: rds.Credentials.fromSecret(dbCredentials),
+    //   allocatedStorage: 20,
+    //   maxAllocatedStorage: 30,
+    //   publiclyAccessible: true,
+    //   removalPolicy: RemovalPolicy.DESTROY,
+    //   deletionProtection: false,
+    // });
 
     // Outputs - wyświetlane po deploy
-    new CfnOutput(this, "DatabaseEndpoint", {
-      value: database.dbInstanceEndpointAddress,
-      description: "RDS PostgreSQL endpoint (host)",
-    });
+    // new CfnOutput(this, "DatabaseEndpoint", {
+    //   value: database.dbInstanceEndpointAddress,
+    //   description: "RDS PostgreSQL endpoint (host)",
+    // });
 
-    new CfnOutput(this, "DatabasePort", {
-      value: database.dbInstanceEndpointPort,
-      description: "RDS PostgreSQL port",
-    });
+    // new CfnOutput(this, "DatabasePort", {
+    //   value: database.dbInstanceEndpointPort,
+    //   description: "RDS PostgreSQL port",
+    // });
 
-    new CfnOutput(this, "DatabaseName", {
-      value: "usersdb",
-      description: "Database name",
-    });
+    // new CfnOutput(this, "DatabaseName", {
+    //   value: "usersdb",
+    //   description: "Database name",
+    // });
 
-    new CfnOutput(this, "DatabaseCredentialsSecretArn", {
-      value: dbCredentials.secretArn,
-      description: "Secret ARN for database credentials",
-    });
+    // new CfnOutput(this, "DatabaseCredentialsSecretArn", {
+    //   value: dbCredentials.secretArn,
+    //   description: "Secret ARN for database credentials",
+    // });
   }
 }
