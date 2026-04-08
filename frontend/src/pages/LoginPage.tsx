@@ -11,6 +11,7 @@ const LoginPage = () => {
   const handleLogin = async (data: LoginCredentials) => {
     try {
       await LoginUser(data);
+
       toast.success("Login successful!");
 
       navigate("/dashboard");
@@ -22,7 +23,7 @@ const LoginPage = () => {
 
   return (
     <Container>
-      <Typography variant="h3">Log to your account</Typography>
+      <Typography component="h1">Log to your account</Typography>
       <LoginForm onSubmit={handleLogin} />
     </Container>
   );

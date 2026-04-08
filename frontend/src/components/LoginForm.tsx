@@ -61,14 +61,19 @@ const LoginForm = ({
           <TextField
             {...field}
             inputRef={ref}
+            id="email"
             margin="normal"
             label="Adres Email"
             required
             fullWidth
             type="email"
             autoComplete="email"
+            autoFocus
             error={!!errors.email}
+            aria-invalid={!!errors.email}
+            aria-describedby="email-helper-text"
             helperText={errors.email?.message}
+            FormHelperTextProps={{ id: "email-helper-text" }}
           />
         )}
       />
@@ -79,14 +84,18 @@ const LoginForm = ({
           <TextField
             {...field}
             inputRef={ref}
+            id="password"
             margin="normal"
             label="Password"
             required
             fullWidth
             autoComplete="current-password"
             error={!!errors.password}
+            aria-invalid={!!errors.password}
+            aria-describedby="password-helper-text"
             helperText={errors.password?.message}
-            type={showPassword ? "password" : "text"}
+            FormHelperTextProps={{ id: "password-helper-text" }}
+            type={showPassword ? "text" : "password"}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -96,7 +105,7 @@ const LoginForm = ({
                     edge="end"
                     onMouseDown={handleMouseDownPassword}
                   >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                    {showPassword ? <Visibility /> : <VisibilityOff />}
                   </IconButton>
                 </InputAdornment>
               ),
