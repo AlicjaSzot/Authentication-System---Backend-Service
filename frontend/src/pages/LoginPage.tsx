@@ -3,6 +3,7 @@ import LoginForm, { LoginCredentials } from "../components/LoginForm";
 import { Container, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { LoginUser } from "../api/auth";
+import { toast } from "react-hot-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -11,12 +12,16 @@ const LoginPage = () => {
     try {
       const result = await LoginUser(data);
 
-      console.log("Zalogowano pomyślnie!", result);
-      localStorage.setItem("token", result.token);
+      const storage = data.rememberMe ? localStorage : sessionStorage;
+
+      storage.setItem("token", result.token);
+
+      toast.success("Login successful!");
 
       navigate("/dashboard");
     } catch (err) {
       console.error("Login failed:", err);
+      toast.error("Login failed!");
     }
   };
 

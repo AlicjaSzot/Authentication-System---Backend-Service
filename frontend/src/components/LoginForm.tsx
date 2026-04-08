@@ -1,10 +1,23 @@
-import { Box, Button, TextField, Link as MuiLink } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Link as MuiLink,
+  InputAdornment,
+  IconButton,
+  CircularProgress,
+  FormControlLabel,
+  Checkbox,
+} from "@mui/material";
 import { Link } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginFormValues, loginSchema } from "../schema/loginSchema";
+import { useState } from "react";
+import { CheckBox, Visibility, VisibilityOff } from "@mui/icons-material";
 
 export type LoginCredentials = {
+  rememberMe: any;
   email: string;
   password: string;
 };
@@ -12,48 +25,105 @@ export type LoginCredentials = {
 const LoginForm = ({
   onSubmit,
 }: {
-  onSubmit: (data: LoginCredentials) => void;
+  onSubmit: (data: LoginFormValues) => void;
 }) => {
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     mode: "onBlur",
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+  const handleMouseDownPassword = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.preventDefault();
+  };
 
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-      <TextField
-        margin="normal"
-        label="Adres Email"
-        required
-        fullWidth
-        type="email"
-        autoComplete="email"
-        error={!!errors.email}
-        helperText={errors.email?.message}
-        {...register("email")}
+      <Controller
+        name="email"
+        control={control}
+        render={({ field: { ref, ...field } }) => (
+          <TextField
+            {...field}
+            inputRef={ref}
+            margin="normal"
+            label="Adres Email"
+            required
+            fullWidth
+            type="email"
+            autoComplete="email"
+            error={!!errors.email}
+            helperText={errors.email?.message}
+          />
+        )}
       />
-      <TextField
-        margin="normal"
-        label="Password"
-        required
-        fullWidth
-        type="password"
-        autoComplete="current-password"
-        error={!!errors.password}
-        helperText={errors.password?.message}
-        {...register("password")}
+      <Controller
+        name="password"
+        control={control}
+        render={({ field: { ref, ...field } }) => (
+          <TextField
+            {...field}
+            inputRef={ref}
+            margin="normal"
+            label="Password"
+            required
+            fullWidth
+            autoComplete="current-password"
+            error={!!errors.password}
+            helperText={errors.password?.message}
+            type={showPassword ? "password" : "text"}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={togglePasswordVisibility}
+                    aria-label="toggle password visibility"
+                    edge="end"
+                    onMouseDown={handleMouseDownPassword}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        )}
+      />
+      <Controller
+        name="rememberMe"
+        control={control}
+        render={({ field: { value, ...field } }) => (
+          <FormControlLabel
+            control={<Checkbox {...field} checked={!!value} />}
+            label="Remember me"
+          />
+        )}
       />
       <Button
         variant="contained"
         sx={{ mt: 3, mb: 2 }}
         type="submit"
         disabled={isSubmitting}
+        startIcon={
+          isSubmitting ? <CircularProgress size={20} color="inherit" /> : null
+        }
       >
-        Log in
+        {isSubmitting ? "Logging in..." : "Log in"}
       </Button>
 
       <Box textAlign="center">
