@@ -10,12 +10,7 @@ const LoginPage = () => {
 
   const handleLogin = async (data: LoginCredentials) => {
     try {
-      const result = await LoginUser(data);
-
-      const storage = data.rememberMe ? localStorage : sessionStorage;
-
-      storage.setItem("token", result.token);
-
+      await LoginUser(data);
       toast.success("Login successful!");
 
       navigate("/dashboard");

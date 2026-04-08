@@ -47,9 +47,10 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+//=== LOGIN ===
 router.post("/login", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe = false } = req.body;
 
     //validation for login
     if (!email || !password) {
@@ -71,14 +72,41 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    //generate jwt
-    const jwtSecret = process.env.JWT_SECRET || "fallback-secret";
-    const token = jwt.sign({ userId: user.id, email: user.email }, jwtSecret, {
-      expiresIn: "24h",
-    });
+    //Generate access and refresh tokens
+    const accessSecret =
+      process.env.JWT_ACCESS_SECRET || "fallback-access-secret";
+    const refreshSecret =
+      process.env.JWT_REFRESH_SECRET || "fallback-refresh-secret";
+
+    //uwtorzenie accessToken i refreshToken, oba zawierają te same dane (userId i email), ale różnią się czasem ważności i sekretem używanym do podpisu
+    const accessToken = jwt.sign(
+      { userId: user.id, email: user.email },
+      accessSecret,
+      { expiresIn: "15m" },
+    );
+    const refreshToken = jwt.sign(
+      { userId: user.id, email: user.email },
+      refreshSecret,
+      { expiresIn: "7d" },
+    );
+
+    const cookieOptions: any = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    };
+
+    if (rememberMe) {
+      cookieOptions.maxAge = 7 * 24 * 60 * 60 * 1000;
+    }
+
+    //ustawienie refresh token jako HTTOnly cookie
+    res.cookie("refreshToken", refreshToken, cookieOptions);
+
+    //zwrócenie access token w odpowiedzi, refresh token jest przechowywany w cookie
     res.status(200).json({
       message: "Logged in successfully",
-      token,
+      accessToken,
       user: {
         id: user.id,
         email: user.email,
@@ -89,6 +117,45 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
     console.error("Error during login:", error);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+
+router.post("/refresh", (req: Request, res: Response): void => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    res.status(401).json({ error: "No refresh token provided" });
+    return;
+  }
+
+  try {
+    const refreshSecret =
+      process.env.JWT_REFRESH_SECRET || "fallback-refresh-secret";
+
+    const decoded = jwt.verify(refreshToken, refreshSecret) as any;
+
+    const accessSecret =
+      process.env.JWT_ACCESS_SECRET || "fallback-access-secret";
+
+    //generujemy nowy access token na podstawie danych z refresh tokena
+    const newAccessToken = jwt.sign(
+      { userId: decoded.userId, email: decoded.email },
+      accessSecret,
+      { expiresIn: "15m" },
+    );
+    //odsyłamy access token na frontend, refresh token pozostaje bez zmian w cookie
+    res.status(200).json({ accessToken: newAccessToken });
+  } catch (err) {
+    res.status(403).json({ error: "Invalid or expired refresh token" });
+  }
+});
+
+//usuwanie refresh tokena z cookie podczas logoutu
+router.post("/logout", (req: Request, res: Response): void => {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+  res.status(200).json({ message: "Logged out successfully" });
 });
 
 router.get(
