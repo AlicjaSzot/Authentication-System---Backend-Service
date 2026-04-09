@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginFormValues, loginSchema } from "../schema/loginSchema";
 import { useState } from "react";
 import { CheckBox, Visibility, VisibilityOff } from "@mui/icons-material";
+import ForgotPasswordModal from "./ForgotPasswordModal";
 
 export type LoginCredentials = {
   rememberMe: any;
@@ -42,6 +43,7 @@ const LoginForm = ({
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -135,10 +137,24 @@ const LoginForm = ({
         {isSubmitting ? "Logging in..." : "Log in"}
       </Button>
 
-      <Box textAlign="center">
-        <MuiLink component={Link} to="/register">
+      <Box display="flex" flexDirection="column" gap={1} textAlign="center">
+        <MuiLink
+          component="button"
+          type="button"
+          variant="body2"
+          onClick={() => setIsModalOpen(true)}
+        >
+          Forgot password?
+        </MuiLink>
+
+        <MuiLink component={Link} to="/register" variant="body2">
           Don't have an account? Register here
         </MuiLink>
+
+        <ForgotPasswordModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       </Box>
     </Box>
   );

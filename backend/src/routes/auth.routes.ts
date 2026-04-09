@@ -3,14 +3,15 @@ import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { authenticateToken } from "../middleware/auth.middleware";
+import { logger } from "../infrastructure/logger";
 
 const router = Router();
 
+//=== REGISTER ===
 router.post("/register", async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, name } = req.body;
 
-    //validation for register
     if (!email || !password) {
       res.status(400).json({ error: "Email and password are required" });
       return;
@@ -100,10 +101,8 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
       cookieOptions.maxAge = 7 * 24 * 60 * 60 * 1000;
     }
 
-    //ustawienie refresh token jako HTTOnly cookie
     res.cookie("refreshToken", refreshToken, cookieOptions);
 
-    //zwrócenie access token w odpowiedzi, refresh token jest przechowywany w cookie
     res.status(200).json({
       message: "Logged in successfully",
       accessToken,
@@ -135,20 +134,17 @@ router.post("/refresh", (req: Request, res: Response): void => {
     const accessSecret =
       process.env.JWT_ACCESS_SECRET || "fallback-access-secret";
 
-    //generujemy nowy access token na podstawie danych z refresh tokena
     const newAccessToken = jwt.sign(
       { userId: decoded.userId, email: decoded.email },
       accessSecret,
       { expiresIn: "15m" },
     );
-    //odsyłamy access token na frontend, refresh token pozostaje bez zmian w cookie
     res.status(200).json({ accessToken: newAccessToken });
   } catch (err) {
     res.status(403).json({ error: "Invalid or expired refresh token" });
   }
 });
 
-//usuwanie refresh tokena z cookie podczas logoutu
 router.post("/logout", (req: Request, res: Response): void => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
@@ -157,6 +153,92 @@ router.post("/logout", (req: Request, res: Response): void => {
   });
   res.status(200).json({ message: "Logged out successfully" });
 });
+
+router.post(
+  "/forgot-password",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email } = req.body;
+
+      logger.info(`[Auth] Request reset password for: '${email}'`);
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        logger.warn(`[Auth] Nie znaleziono użytkownika o emailu: '${email}'`);
+        res
+          .status(200)
+          .json({ message: "If the email exists, a reset link was sent." });
+        return;
+      }
+
+      const secret = process.env.JWT_ACCESS_SECRET + user.password;
+      const resetToken = jwt.sign({ email: user.email, id: user.id }, secret, {
+        expiresIn: "15m",
+      });
+
+      const resetLink = `http://localhost:3000/reset-password/${user.id}/${resetToken}`;
+      logger.info(`[Auth] Genereted reset link for '${email}': ${resetLink}`);
+
+      //tymczasowe logi -----do usuniecia w produkcji-----
+      console.log("=========================================");
+      console.log("EMAIL DO UŻYTKOWNIKA:");
+      console.log(`Kliknij w ten link, aby zresetować hasło: \n${resetLink}`);
+      console.log("=========================================");
+
+      res
+        .status(200)
+        .json({ message: "If the email exists, a reset link was sent." });
+    } catch (err) {
+      console.error("Error during forgot password:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
+
+router.post(
+  "/reset-password/:id/:token",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id, token } = req.params;
+      const { newPassword } = req.body;
+
+      if (typeof id !== "string" || typeof token !== "string") {
+        res.status(400).json({ error: "Invalid token format." });
+        return;
+      }
+
+      const user = await prisma.user.findUnique({ where: { id } });
+      if (!user) {
+        res.status(400).json({ error: "Invalid link" });
+        return;
+      }
+
+      const secret =
+        (process.env.JWT_ACCESS_SECRET || "fallback-access-secret") +
+        user.password;
+
+      try {
+        jwt.verify(token, secret);
+      } catch (err) {
+        res.status(400).json({ error: "Invalid or expired token" });
+        return;
+      }
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword },
+      });
+
+      res
+        .status(200)
+        .json({ message: "Password has been successfully reset." });
+    } catch (err) {
+      console.error("Error during password reset:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
 
 router.get(
   "/profile",
