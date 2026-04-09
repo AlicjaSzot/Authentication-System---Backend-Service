@@ -45,10 +45,16 @@ const ResetPasswordPage = () => {
       toast.success(
         "Password reset successful! You can now log in with your new password.",
       );
-      navigate("/dashboard");
+      navigate("/login");
     } catch (err) {
       console.error("Password reset failed:", err);
-      toast.error("Password reset failed! Please try again.");
+      const error = err as any;
+      if (error.response?.status < 500) {
+        toast.error(
+          error.response?.data?.error ||
+            "Password reset failed! Please try again.",
+        );
+      }
     }
   };
 

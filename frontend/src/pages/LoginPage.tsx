@@ -15,9 +15,17 @@ const LoginPage = () => {
       toast.success("Login successful!");
 
       navigate("/dashboard");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login failed:", err);
-      toast.error("Login failed!");
+
+      if (err.response?.status === 401) {
+        toast.error("Invalid email or password.");
+      } else if (err.response?.status >= 400 && err.response?.status < 500) {
+        toast.error(
+          err.response?.data?.error || "Login failed. Please check your input.",
+        );
+      }
+      // 500+ and network errors are handled globally in axiosClient interceptor
     }
   };
 

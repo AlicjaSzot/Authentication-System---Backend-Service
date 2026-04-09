@@ -32,6 +32,7 @@ const ForgotPasswordModal = ({ open, onClose }: ForgotPasswordModalProps) => {
 
       setIsFormSent(true);
       setEmail("");
+      toast.success("If the email exists, reset instructions have been sent.");
     } catch (err) {
       console.error("Error during forgot password request:", err);
     } finally {
