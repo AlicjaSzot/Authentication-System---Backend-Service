@@ -16,6 +16,7 @@ import { LoginFormValues, loginSchema } from "../schema/loginSchema";
 import { useState } from "react";
 import { CheckBox, Visibility, VisibilityOff } from "@mui/icons-material";
 import ForgotPasswordModal from "./ForgotPasswordModal";
+import usePasswordVisibility from "../hooks/usePasswordVisibility";
 
 export type LoginCredentials = {
   rememberMe: any;
@@ -42,17 +43,9 @@ const LoginForm = ({
     },
   });
 
-  const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
-  const handleMouseDownPassword = (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
-    event.preventDefault();
-  };
+  const { showPassword, togglePasswordVisibility, handleMouseDownPassword } =
+    usePasswordVisibility();
 
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>

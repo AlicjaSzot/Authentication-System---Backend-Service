@@ -3,10 +3,11 @@ import {
   Button,
   CircularProgress,
   Container,
+  IconButton,
+  InputAdornment,
   TextField,
   Typography,
 } from "@mui/material";
-import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -16,11 +17,24 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ResetLoginPassword } from "../api/auth";
 import toast from "react-hot-toast";
+import usePasswordVisibility from "../hooks/usePasswordVisibility";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const ResetPasswordPage = () => {
   const { id, token } = useParams<{ id: string; token: string }>();
-
   const navigate = useNavigate();
+
+  const {
+    showPassword: showNewPassword,
+    togglePasswordVisibility: toggleNewPasswordVisibility,
+    handleMouseDownPassword: handleMouseDownNewPassword,
+  } = usePasswordVisibility();
+
+  const {
+    showPassword: showConfirmPassword,
+    togglePasswordVisibility: toggleConfirmPasswordVisibility,
+    handleMouseDownPassword: handleMouseDownConfirmPassword,
+  } = usePasswordVisibility();
 
   const {
     control,
@@ -82,9 +96,23 @@ const ResetPasswordPage = () => {
               {...field}
               inputRef={ref}
               label="New Password"
-              type="password"
+              type={showNewPassword ? "text" : "password"}
               fullWidth
               margin="normal"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={toggleNewPasswordVisibility}
+                      onMouseDown={handleMouseDownNewPassword}
+                      edge="end"
+                    >
+                      {showNewPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
           )}
         />
@@ -99,10 +127,24 @@ const ResetPasswordPage = () => {
               margin="normal"
               required
               fullWidth
-              label="Powtórz hasło"
-              type="password"
+              label="Confirm new password"
+              type={showConfirmPassword ? "text" : "password"}
               error={!!errors.confirmPassword}
               helperText={errors.confirmPassword?.message}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={toggleConfirmPasswordVisibility}
+                      onMouseDown={handleMouseDownConfirmPassword}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
           )}
         />
