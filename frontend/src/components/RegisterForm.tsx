@@ -1,6 +1,6 @@
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { RegisterFormValues } from "../schema/registerSchema";
+import { RegisterFormValues, registerSchema } from "../schema/registerSchema";
 import {
   Button,
   IconButton,
@@ -10,28 +10,25 @@ import {
 } from "@mui/material";
 import usePasswordVisibility from "../hooks/usePasswordVisibility";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-
-export type RegisterCredentials = {
-  name: string;
-  email: string;
-  password: string;
-};
+import { zodResolver } from "@hookform/resolvers/zod/dist/zod";
 
 const RegisterForm = ({
   onSubmit,
 }: {
-  onSubmit: (data: RegisterCredentials) => void;
+  onSubmit: (data: RegisterFormValues) => void;
 }) => {
   const {
     control,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
     mode: "onBlur",
     defaultValues: {
       name: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -55,6 +52,8 @@ const RegisterForm = ({
             label="Name"
             fullWidth
             margin="normal"
+            error={!!errors.name}
+            helperText={errors.name?.message}
           />
         )}
       />
@@ -70,6 +69,8 @@ const RegisterForm = ({
             type="email"
             fullWidth
             margin="normal"
+            error={!!errors.email}
+            helperText={errors.email?.message}
           />
         )}
       />
@@ -85,6 +86,8 @@ const RegisterForm = ({
             type={showPassword ? "text" : "password"}
             fullWidth
             margin="normal"
+            error={!!errors.password}
+            helperText={errors.password?.message}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -114,6 +117,8 @@ const RegisterForm = ({
             type={showConfirmPassword ? "text" : "password"}
             fullWidth
             margin="normal"
+            error={!!errors.confirmPassword}
+            helperText={errors.confirmPassword?.message}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
