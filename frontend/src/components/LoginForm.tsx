@@ -58,7 +58,7 @@ const LoginForm = ({
             inputRef={ref}
             id="email"
             margin="normal"
-            label="Adres Email"
+            label="Email"
             required
             fullWidth
             type="email"
