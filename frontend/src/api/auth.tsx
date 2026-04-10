@@ -47,9 +47,12 @@ export const ResetLoginPassword = async (
   }
 };
 
-export const RegisterUser = async (
-  data: Omit<RegisterFormValues, "confirmPassword">,
-) => {
+export type RegisterApiPayload = Omit<
+  RegisterFormValues,
+  "confirmPassword" | "acceptTerms"
+>;
+
+export const RegisterUser = async (data: RegisterApiPayload) => {
   const payload = {
     name: data.name,
     email: data.email,

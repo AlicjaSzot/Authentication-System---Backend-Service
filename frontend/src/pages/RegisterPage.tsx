@@ -11,7 +11,7 @@ const RegisterPage = () => {
 
   const handleRegister = async (data: RegisterFormValues) => {
     try {
-      const { confirmPassword, ...apiData } = data;
+      const { confirmPassword, acceptTerms, ...apiData } = data;
 
       await RegisterUser(apiData);
       toast.success("Registration successful! Please log in.");
