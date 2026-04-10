@@ -1,4 +1,5 @@
 import { LoginCredentials } from "../components/LoginForm";
+import { RegisterFormValues } from "../schema/registerSchema";
 import { ResetPasswordValues } from "../schema/resetPasswordSchema";
 import { api, setAccessToken } from "./axiosClient";
 
@@ -44,4 +45,20 @@ export const ResetLoginPassword = async (
     );
     throw err;
   }
+};
+
+export type RegisterApiPayload = Omit<
+  RegisterFormValues,
+  "confirmPassword" | "acceptTerms"
+>;
+
+export const RegisterUser = async (data: RegisterApiPayload) => {
+  const payload = {
+    name: data.name,
+    email: data.email,
+    password: data.password,
+  };
+
+  const response = await api.post("/auth/register", payload);
+  return response.data;
 };

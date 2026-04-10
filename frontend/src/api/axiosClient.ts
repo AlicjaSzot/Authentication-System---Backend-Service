@@ -56,8 +56,10 @@ api.interceptors.response.use(
     }
 
     // === Global server errors
-    if (error.response?.status >= 500) {
-      toast.error("A server error occurred. Please try again later.");
+    if (error.response) {
+      if (error.response.status >= 500) {
+        toast.error("A server error occurred. Please try again later.");
+      }
     } else if (error.request) {
       toast.error(
         "A connection error occurred. Please check your internet connection.",
@@ -65,6 +67,7 @@ api.interceptors.response.use(
     } else {
       toast.error("An unexpected error occurred.");
     }
+
     return Promise.reject(error);
   },
 );

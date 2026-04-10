@@ -17,6 +17,7 @@ import { useState } from "react";
 import { CheckBox, Visibility, VisibilityOff } from "@mui/icons-material";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import usePasswordVisibility from "../hooks/usePasswordVisibility";
+import { useModal } from "../hooks/useModal";
 
 export type LoginCredentials = {
   rememberMe: any;
@@ -43,7 +44,9 @@ const LoginForm = ({
     },
   });
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isOpen: isModalOpen, openModal, closeModal } = useModal();
+
   const { showPassword, togglePasswordVisibility, handleMouseDownPassword } =
     usePasswordVisibility();
 
@@ -58,7 +61,7 @@ const LoginForm = ({
             inputRef={ref}
             id="email"
             margin="normal"
-            label="Adres Email"
+            label="Email"
             required
             fullWidth
             type="email"
@@ -135,7 +138,7 @@ const LoginForm = ({
           component="button"
           type="button"
           variant="body2"
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => openModal()}
         >
           Forgot password?
         </MuiLink>
@@ -144,10 +147,7 @@ const LoginForm = ({
           Don't have an account? Register here
         </MuiLink>
 
-        <ForgotPasswordModal
-          open={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-        />
+        <ForgotPasswordModal open={isModalOpen} onClose={closeModal} />
       </Box>
     </Box>
   );

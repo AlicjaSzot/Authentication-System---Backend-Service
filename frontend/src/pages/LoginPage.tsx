@@ -25,7 +25,6 @@ const LoginPage = () => {
           err.response?.data?.error || "Login failed. Please check your input.",
         );
       }
-      // 500+ and network errors are handled globally in axiosClient interceptor
     }
   };
 
