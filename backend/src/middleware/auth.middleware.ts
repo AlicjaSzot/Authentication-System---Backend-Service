@@ -18,7 +18,7 @@ export const authenticateToken = (
 
   //3. weryfikujemy token
   try {
-    const secret = process.env.JWT_SECRET || "fallback-secret";
+    const secret = process.env.JWT_ACCESS_SECRET || "fallback-access-secret";
     const decoded = jwt.verify(token, secret);
 
     (req as any).user = decoded;
