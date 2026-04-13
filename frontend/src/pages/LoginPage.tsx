@@ -4,16 +4,21 @@ import { Container, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { LoginUser } from "../api/auth";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../hooks/useAuth";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (data: LoginCredentials) => {
     try {
-      await LoginUser(data);
+      const responseData = await LoginUser(data);
+
+      const { user, accessToken } = responseData;
+
+      login(user, accessToken);
 
       toast.success("Login successful!");
-
       navigate("/dashboard");
     } catch (err: any) {
       console.error("Login failed:", err);

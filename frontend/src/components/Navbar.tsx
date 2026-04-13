@@ -7,17 +7,14 @@ import {
   Typography,
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 const Navbar = () => {
   const navigate = useNavigate();
 
-  //------DO ZMIANY-------
-  const isLoggedIn = true;
+  const { user, isLoggedIn, logout } = useAuth();
 
-  const handleLogout = () => {
-    console.log("Logout clicked");
-    navigate("/login");
-  };
+  console.log(isLoggedIn);
 
   return (
     <AppBar position="static" color="default">
@@ -37,8 +34,9 @@ const Navbar = () => {
           >
             B2B Support
           </Typography>
+
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            {isLoggedIn ? (
+            {!isLoggedIn ? (
               <>
                 <Button component={RouterLink} to="/login" color="inherit">
                   Login
@@ -57,11 +55,7 @@ const Navbar = () => {
                 <Button component={RouterLink} to="/dashboard" color="inherit">
                   Dashboard
                 </Button>
-                <Button
-                  onClick={handleLogout}
-                  variant="outlined"
-                  color="primary"
-                >
+                <Button onClick={logout} variant="outlined" color="primary">
                   Logout
                 </Button>
               </>
