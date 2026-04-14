@@ -71,3 +71,13 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+export const refreshSession = async () => {
+  const res = await axios.post(
+    "http://localhost:3001/auth/refresh",
+    {},
+    { withCredentials: true },
+  );
+  setAccessToken(res.data.accessToken);
+  return res.data;
+};
