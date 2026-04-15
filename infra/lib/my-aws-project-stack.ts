@@ -13,6 +13,7 @@ import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
+import * as logs from "aws-cdk-lib/aws-logs";
 
 export class MyAwsProjectStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -67,6 +68,13 @@ export class MyAwsProjectStack extends cdk.Stack {
     new CfnOutput(this, "EventsQueueUrl", { value: eventsQueue.queueUrl });
     new CfnOutput(this, "EventsDlqUrl", { value: eventsDlq.queueUrl });
 
+    //Logs Group for Lambda
+    const lambdaLogGroup = new logs.LogGroup(this, "EventsConsumerLogGroup", {
+      logGroupName: "events-consumer",
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
     // Lambda
     const eventsConsumerLambda = new lambda.Function(
       this,
@@ -77,8 +85,15 @@ export class MyAwsProjectStack extends cdk.Stack {
         handler: "consumer.handler",
         code: lambda.Code.fromAsset(path.join(__dirname, "../lambda/dist")),
         timeout: Duration.seconds(10),
+        logGroup: lambdaLogGroup,
       },
     );
+
+    new CfnOutput(this, "LambdaLogGroupName", {
+      value: lambdaLogGroup.logGroupName,
+      description:
+        "CloudWatch Logs group for the events consumer Lambda function",
+    });
 
     // SQS -> Lambda trigger
     eventsConsumerLambda.addEventSource(
